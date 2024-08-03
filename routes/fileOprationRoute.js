@@ -7,7 +7,7 @@ const upload = multer({ dest: 'uploads/' });
 
 router.post('/upload-file', upload.single('File'), uploadFile);
 router.post('/upload-img', upload.single('File'), uploadeImg);
-router.get('/get-img', upload.single('File'), getImg);
+// router.get('/get-img', upload.single('File'), getImg);
 router.get('/get-img/:filename', upload.single('File'), getImgFilename);
 
 
