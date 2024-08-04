@@ -24,6 +24,88 @@ const uploadFile = async (req, res) => {
     }
 };
 
+
+// const writeFile = async (req, res) => {
+//     try {
+//         const jsonData = await FileOperation.find()
+//         if (!jsonData) {
+//             return res.status(200).send({ message: "no data found" })
+//         }
+//         const worksheet = xlsx.utils.json_to_sheet(jsonData)
+//         const workbook = xlsx.utils.book_new();
+//         xlsx.utils.book_append_sheet(workbook, worksheet, 'sheet1')
+
+//         const filePath = path.join(__dirname, 'output.xlxs')
+//         // console.log(filePath, "--worksheettt")
+
+//         xlsx.writeFile(workbook, filePath)
+//         console.log(filePath)
+
+//         res.download(filePath, 'output.xlsx', (err) => {
+//             if (err) {
+//                 console.error('Error sending the file:', err);
+//                 res.status(500).send('Error sending the file.');
+//             } else {
+//                 fs.unlink(filePath, (err) => {
+//                     if (err) console.error('Error removing the file:', err);
+//                 });
+//             }
+//         })
+
+//     } catch (error) {
+//         console.error('Error writing Excel file:', error);
+//         res.status(500).send('Error processing the request.');
+//     }
+// }
+
+
+const writeFile = async (req, res) => {
+    try {
+        // Fetch data from the database
+        const jsonData = await FileOperation.find();
+        if (!jsonData || jsonData.length === 0) {
+            return res.status(200).send({ message: "No data found" });
+        }
+
+        // Convert JSON data to worksheet
+        const worksheet = xlsx.utils.json_to_sheet(jsonData);
+        const workbook = xlsx.utils.book_new();
+        xlsx.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+
+        const filePath = path.join(__dirname, 'output.xlsx');
+        console.log('File path:', filePath);
+        try {
+            xlsx.writeFile(workbook, filePath);
+            console.log('File written successfully to', filePath);
+        } catch (writeError) {
+            console.error('Error writing file:', writeError);
+            return res.status(500).send('Error writing file.');
+        }
+
+        fs.readFile(filePath, (readError, data) => {
+            if (readError) {
+                console.error('Error reading file:', readError);
+                return res.status(500).send('Error reading file.');
+            }
+            const base64String = data.toString('base64');
+            res.status(200).send({ file: base64String });
+
+            fs.unlink(filePath, (unlinkError) => {
+                if (unlinkError) {
+                    console.error('Error removing the file:', unlinkError);
+                } else {
+                    console.log('File removed successfully');
+                }
+            });
+        });
+
+
+    } catch (error) {
+        console.error('Error writing Excel file:', error);
+        res.status(500).send('Error processing the request.');
+    }
+};
+
 const uploadeImg = async (req, res) => {
     try {
         if (!req.file) {
@@ -74,5 +156,6 @@ module.exports = {
     uploadFile,
     uploadeImg,
     // getImg,
-    getImgFilename
+    getImgFilename,
+    writeFile
 }
